@@ -1,0 +1,145 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'maven-publish'
+}
+
+android {
+    namespace 'com.snowflake.toolkit'
+    compileSdk rootProject.ext.android.compileSdk
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.android.minSdk
+        targetSdkVersion rootProject.ext.android.targetSdk
+        versionCode rootProject.ext.android.versionCode
+        versionName rootProject.ext.android.versionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    publishing {
+        singleVariant("release")
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId = "com.snowflake.toolkit"   // 随便起，但要唯一
+                artifactId = "toolkit"
+                version = "1.0.0"
+
+                from components.release
+            }
+        }
+
+        // 👉 这里是关键：自定义路径
+        repositories {
+            maven {
+                url = uri("E:/MavenRepo")   // 👈 你自己选路径
+            }
+        }
+    }
+}
+
+//afterEvaluate {
+//    publishing {
+//        publications {
+//            mavenRelease(MavenPublication) {
+//                from components.release
+//
+//                groupId = "io.github.cooldev116"
+//                artifactId = "lib_common_tool"
+//                version = "1.0.0"
+//
+//                pom {
+//                    name.set("lib_common_tool")
+//                    description.set("Common tools library for Android")
+//                    url.set("https://github.com/cooldev116/AndroidToolKit")
+//                    licenses {
+//                        license {
+//                            name.set("The Apache License, Version 2.0")
+//                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+//                        }
+//                    }
+//                    developers {
+//                        developer {
+//                            id.set("cooldev116")
+//                            name.set("cooldev116")
+//                            email.set("495776706@qq.com")
+//                        }
+//                    }
+//                    scm {
+//                        connection.set("scm:git:git://github.com/cooldev116/AndroidToolKit.git")
+//                        developerConnection.set("scm:git:ssh://github.com/cooldev116/AndroidToolKit.git")
+//                        url.set("https://github.com/cooldev116/AndroidToolKit")
+//                    }
+//                }
+//            }
+//        }
+//
+//        repositories {
+//            maven {
+//                name = "GitHubPackages"
+//                url = uri("https://maven.pkg.github.com/cooldev116/AndroidToolKit")
+//                credentials {
+//                    username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
+//                    password = project.findProperty("gpr.token") ?: System.getenv("GPR_TOKEN")
+//                }
+//            }
+//        }
+//    }
+//}
+
+dependencies {
+    implementation rootProject.ext.dependencies.coreKtx
+    implementation rootProject.ext.dependencies.appcompat
+    implementation rootProject.ext.dependencies.material
+    implementation rootProject.ext.dependencies.constraintlayout
+    implementation rootProject.ext.dependencies.junit
+    implementation rootProject.ext.dependencies.junitExt
+    implementation rootProject.ext.dependencies.espresso
+
+    implementation rootProject.ext.dependencies.viewModelKtx
+    implementation rootProject.ext.dependencies.liveDataKtx
+    implementation rootProject.ext.dependencies.activity
+    implementation rootProject.ext.dependencies.activityKtx
+    implementation rootProject.ext.dependencies.fragment
+    implementation rootProject.ext.dependencies.fragmentKtx
+    implementation rootProject.ext.dependencies.extensions
+    implementation rootProject.ext.dependencies.autoSize
+    implementation rootProject.ext.dependencies.immersionbar
+    implementation rootProject.ext.dependencies.immersionbarKtx
+    implementation rootProject.ext.dependencies.BaseRecyclerViewAdapterHelper
+    implementation rootProject.ext.dependencies.refreshKernel
+    implementation rootProject.ext.dependencies.refreshHeader
+    implementation rootProject.ext.dependencies.refreshFooter
+    implementation rootProject.ext.dependencies.rWidgetHelper
+    implementation rootProject.ext.dependencies.glide
+    implementation rootProject.ext.dependencies.xxPermission
+    implementation rootProject.ext.dependencies.mmkv
+//    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
+//    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation 'androidx.startup:startup-runtime:1.2.0'
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+}

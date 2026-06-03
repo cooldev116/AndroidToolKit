@@ -1,0 +1,68 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+}
+
+android {
+    namespace 'com.adwant.kit'
+    compileSdk rootProject.ext.android.compileSdk
+
+    defaultConfig {
+        minSdk rootProject.ext.android.minSdk
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+}
+
+dependencies {
+    implementation rootProject.ext.dependencies.coreKtx
+    implementation rootProject.ext.dependencies.appcompat
+    implementation rootProject.ext.dependencies.material
+    implementation rootProject.ext.dependencies.constraintlayout
+    implementation rootProject.ext.dependencies.junit
+    implementation rootProject.ext.dependencies.junitExt
+    implementation rootProject.ext.dependencies.espresso
+
+    implementation rootProject.ext.dependencies.viewModelKtx
+    implementation rootProject.ext.dependencies.liveDataKtx
+    implementation rootProject.ext.dependencies.activity
+    implementation rootProject.ext.dependencies.activityKtx
+    implementation rootProject.ext.dependencies.fragment
+    implementation rootProject.ext.dependencies.fragmentKtx
+    implementation rootProject.ext.dependencies.extensions
+    implementation rootProject.ext.dependencies.autoSize
+    implementation rootProject.ext.dependencies.immersionbar
+    implementation rootProject.ext.dependencies.immersionbarKtx
+    implementation rootProject.ext.dependencies.toolkit
+
+    implementation 'com.pangle_beta.cn:mediation-sdk:7.4.2.0' //穿山甲融合SDK
+    implementation 'com.pangle_beta.cn:mediation-test-tools:7.4.1.4' //穿山甲融合测试工具
+    implementation 'com.pangle_beta.cn:mediation-gdt-adapter:4.662.1532.0'  //GDT 优量汇 adapter
+    implementation 'com.pangle_beta.cn:mediation-baidu-adapter:9.423.3'  //Baidu adapter
+    implementation 'com.pangle_beta.cn:mediation-ks-adapter:4.11.20.1.0'
+    //KS adapter
+//    implementation 'com.pangle_beta.cn:mediation-sigmob-adapter:4.25.2.0'
+
+    // Maven-available ADN SDKs
+    implementation 'com.qq.e.union:union:4.662.1532' // 优量汇 SDK
+
+    // KS / Sigmob are usually delivered as vendor AAR packages
+    // Required versions for current adapters:
+    // KS: 4.11.20.1, Sigmob(WindAd): 4.25.2, sigmob_common: 1.8.6
+//    implementation fileTree(dir: 'libs/adn', include: ['*.aar', '*.jar'])
+}
