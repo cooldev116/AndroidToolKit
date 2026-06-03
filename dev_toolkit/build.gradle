@@ -2,6 +2,7 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
     id 'maven-publish'
+    id 'signing'
 }
 
 android {
@@ -13,13 +14,15 @@ android {
         targetSdkVersion rootProject.ext.android.targetSdk
         versionCode rootProject.ext.android.versionCode
         versionName rootProject.ext.android.versionName
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
     publishing {
-        singleVariant("release")
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
     }
 
     buildTypes {
@@ -35,7 +38,6 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11
     }
-
     buildFeatures {
         viewBinding true
     }
@@ -45,71 +47,80 @@ afterEvaluate {
     publishing {
         publications {
             release(MavenPublication) {
-                groupId = "com.snowflake.toolkit"   // 随便起，但要唯一
+                groupId = "io.github.cooldev116"
                 artifactId = "toolkit"
                 version = "1.0.0"
-
                 from components.release
+
+                pom {
+                    name = "AndroidToolKit"
+                    description = "Common Android utility library"
+                    url = "https://github.com/cooldev116/AndroidToolKit"
+                    licenses {
+                        license {
+                            name = "The Apache License, Version 2.0"
+                            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = "cooldev116"
+                            name = "cooldev116"
+                            email = "495776706@qq.com"
+                        }
+                    }
+                    scm {
+                        connection = "scm:git:git://github.com/cooldev116/AndroidToolKit.git"
+                        developerConnection = "scm:git:ssh://git@github.com/cooldev116/AndroidToolKit.git"
+                        url = "https://github.com/cooldev116/AndroidToolKit"
+                    }
+                }
             }
         }
-
-        // 👉 这里是关键：自定义路径
         repositories {
             maven {
-                url = uri("E:/MavenRepo")   // 👈 你自己选路径
+                name = 'ossrhStagingApi'
+                url = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
+                credentials {
+                    username = findProperty("mavenCentralUsername")
+                    password = findProperty("mavenCentralPassword")
+                }
             }
+        }
+    }
+
+    // GPG 私钥：$GRADLE_USER_HOME/signing-key.asc，密码：gradle.properties 里的 gpg.passphrase
+    signing {
+        def keyFile = new File(gradle.gradleUserHomeDir, "signing-key.asc")
+        useInMemoryPgpKeys(keyFile.getText("UTF-8").trim(), providers.gradleProperty("gpg.passphrase").get())
+        sign publishing.publications.release
+    }
+}
+
+// Central Portal 需要额外一步提交 Deployment（maven-publish 官方兼容方式）
+tasks.register("finalizeMavenCentralDeployment") {
+    group = "publishing"
+    dependsOn "publishReleasePublicationToOssrhStagingApiRepository"
+    doLast {
+        def user = findProperty("mavenCentralUsername")
+        def pass = findProperty("mavenCentralPassword")
+        def token = "${user}:${pass}".bytes.encodeBase64().toString()
+        def url = new URL("https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/io.github.cooldev116")
+        def conn = url.openConnection()
+        conn.setRequestMethod("POST")
+        conn.setRequestProperty("Authorization", "Bearer ${token}")
+        conn.setDoOutput(true)
+        conn.getOutputStream().close()
+        if (conn.getResponseCode() >= 300) {
+            throw new GradleException("Central Portal submit failed: ${conn.getResponseCode()}")
         }
     }
 }
 
-//afterEvaluate {
-//    publishing {
-//        publications {
-//            mavenRelease(MavenPublication) {
-//                from components.release
-//
-//                groupId = "io.github.cooldev116"
-//                artifactId = "lib_common_tool"
-//                version = "1.0.0"
-//
-//                pom {
-//                    name.set("lib_common_tool")
-//                    description.set("Common tools library for Android")
-//                    url.set("https://github.com/cooldev116/AndroidToolKit")
-//                    licenses {
-//                        license {
-//                            name.set("The Apache License, Version 2.0")
-//                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-//                        }
-//                    }
-//                    developers {
-//                        developer {
-//                            id.set("cooldev116")
-//                            name.set("cooldev116")
-//                            email.set("495776706@qq.com")
-//                        }
-//                    }
-//                    scm {
-//                        connection.set("scm:git:git://github.com/cooldev116/AndroidToolKit.git")
-//                        developerConnection.set("scm:git:ssh://github.com/cooldev116/AndroidToolKit.git")
-//                        url.set("https://github.com/cooldev116/AndroidToolKit")
-//                    }
-//                }
-//            }
-//        }
-//
-//        repositories {
-//            maven {
-//                name = "GitHubPackages"
-//                url = uri("https://maven.pkg.github.com/cooldev116/AndroidToolKit")
-//                credentials {
-//                    username = project.findProperty("gpr.user") ?: System.getenv("GPR_USER")
-//                    password = project.findProperty("gpr.token") ?: System.getenv("GPR_TOKEN")
-//                }
-//            }
-//        }
-//    }
-//}
+tasks.register("publishToMavenCentral") {
+    group = "publishing"
+    dependsOn "finalizeMavenCentralDeployment"
+}
 
 dependencies {
     implementation rootProject.ext.dependencies.coreKtx
@@ -119,7 +130,6 @@ dependencies {
     implementation rootProject.ext.dependencies.junit
     implementation rootProject.ext.dependencies.junitExt
     implementation rootProject.ext.dependencies.espresso
-
     implementation rootProject.ext.dependencies.viewModelKtx
     implementation rootProject.ext.dependencies.liveDataKtx
     implementation rootProject.ext.dependencies.activity
@@ -138,8 +148,6 @@ dependencies {
     implementation rootProject.ext.dependencies.glide
     implementation rootProject.ext.dependencies.xxPermission
     implementation rootProject.ext.dependencies.mmkv
-//    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
-//    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     implementation 'androidx.startup:startup-runtime:1.2.0'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
 }

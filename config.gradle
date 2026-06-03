@@ -67,6 +67,6 @@ ext {
             rWidgetHelper                : 'com.github.RuffianZhong:RWidgetHelper:androidx.v0.0.14',
             mmvk                         : 'com.tencent:mmkv:1.2.13',
             //基类、工具库
-            toolkit                      : 'com.snowflake.toolkit:toolkit:1.0.0'
+            toolkit                      : 'io.github.cooldev116:toolkit:1.0.0'
     ]
 }
