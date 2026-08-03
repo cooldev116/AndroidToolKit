@@ -22,7 +22,7 @@ class AdKit private constructor() {
     /**
      * 是否允许展示广告
      */
-    private var isAllowShowAd = false
+    private var isAllowShowAd = true
 
     /**
      * 已经展示插屏次数
