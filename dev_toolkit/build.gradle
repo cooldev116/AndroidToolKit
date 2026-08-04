@@ -77,6 +77,12 @@ dependencies {
     implementation rootProject.ext.dependencies.mmkv
     implementation 'androidx.startup:startup-runtime:1.2.0'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+
+    // Android_CN_OAID（公开 JitPack 坐标，api 传递给宿主；排除需华为/荣耀私有仓的标识库）
+    api(rootProject.ext.dependencies.cnOaid) {
+        exclude group: 'com.huawei.hms', module: 'ads-identifier'
+        exclude group: 'com.hihonor.mcs', module: 'ads-identifier'
+    }
 }
 
 afterEvaluate {

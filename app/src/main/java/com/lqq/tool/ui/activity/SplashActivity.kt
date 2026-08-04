@@ -3,6 +3,7 @@ package com.lqq.tool.ui.activity
 import com.adwant.kit.inter.ISplashStyle
 import com.adwant.kit.ui.SplashStartAdActivity
 import com.lqq.tool.impl.SplashStyle
+import com.snowflake.toolkit.device.DeviceUdidUtil
 import com.snowflake.toolkit.ext.openActivity
 
 class SplashActivity : SplashStartAdActivity() {
@@ -19,6 +20,7 @@ class SplashActivity : SplashStartAdActivity() {
     }
 
     override fun showPrivacyDialog(next: () -> Unit) {
+        DeviceUdidUtil.initOaid()
         next.invoke()
     }
 
