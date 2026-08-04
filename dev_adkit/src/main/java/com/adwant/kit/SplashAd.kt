@@ -49,6 +49,9 @@ class SplashAd(
         }, 3500)
     }
 
+    /**
+     * 真正展示广告
+     */
     private fun realShowSplashAd(activity: FragmentActivity, splashAd: CSJSplashAd?) {
         val container = generateContainerView(activity)
         splashAd?.setSplashAdListener(object : CSJSplashAd.SplashAdListener {
@@ -72,6 +75,9 @@ class SplashAd(
         splashAd?.showSplashView(container)
     }
 
+    /**
+     * 移除广告的容器
+     */
     private fun removeSplashContainer(container: FrameLayout) {
         val parent = container.parent as? ViewGroup ?: return
         parent.removeView(container)

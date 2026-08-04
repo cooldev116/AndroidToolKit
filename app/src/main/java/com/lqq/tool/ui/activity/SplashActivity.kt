@@ -25,5 +25,6 @@ class SplashActivity : SplashStartAdActivity() {
     override fun onSplashCompleted() {
         super.onSplashCompleted()
         openActivity(MainActivity::class.java)
+        finish()
     }
 }

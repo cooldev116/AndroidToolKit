@@ -29,6 +29,11 @@ class AdKit private constructor() {
      */
     private var showedInterstitialCount = 0
 
+    /**
+     * 是否初始化
+     */
+    private var isInit = false
+
     companion object {
         val instance by lazy {
             AdKit()
@@ -45,6 +50,7 @@ class AdKit private constructor() {
         isDebug: Boolean = false,
         callback: ((Boolean, String) -> Unit)? = null
     ) {
+        if (isInit) return
         this.isDebug = isDebug
         AdKitLog.i("init called, isDebug=$isDebug")
         TTAdSdk.init(context, buildTTAdConfig(appId, customController))

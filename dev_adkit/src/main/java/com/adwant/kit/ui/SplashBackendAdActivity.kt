@@ -9,6 +9,7 @@ abstract class SplashBackendAdActivity : BaseSplashAdActivity() {
 
     override fun initView() {
         super.initView()
+        startFakeProgress()
         startShowSplash()
     }
 

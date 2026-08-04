@@ -1,5 +1,9 @@
 package com.adwant.kit.ui
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ValueAnimator
+import android.view.animation.DecelerateInterpolator
 import com.adwant.kit.AdFlowCallback
 import com.adwant.kit.AdType
 import com.adwant.kit.databinding.KitActivitySplashBinding
@@ -14,9 +18,55 @@ import com.snowflake.toolkit.base.BaseVBMultiActivity
  */
 abstract class BaseSplashAdActivity : BaseVBMultiActivity<KitActivitySplashBinding>() {
 
+    private var progressAnimator: ValueAnimator? = null
+    private var hasNotifiedCompleted = false
+
     override fun initView() {
         super.initView()
         binding.bindSplashStyle(this, getSplashStyle())
+    }
+
+    /**
+     * 假进度：等待广告加载与其它初始化时缓慢推进到 90%
+     * 冷启动需在用户同意隐私协议后再调用
+     */
+    protected fun startFakeProgress() {
+        binding.pbSplash.max = PROGRESS_MAX
+        binding.pbSplash.progress = 0
+        progressAnimator?.cancel()
+        progressAnimator = ValueAnimator.ofInt(0, PROGRESS_HOLD).apply {
+            duration = FAKE_PROGRESS_DURATION
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { animator ->
+                binding.pbSplash.progress = animator.animatedValue as Int
+            }
+            start()
+        }
+    }
+
+    /**
+     * 快速补满进度后再回调完成
+     */
+    private fun finishWithProgress(done: () -> Unit) {
+        progressAnimator?.cancel()
+        val current = binding.pbSplash.progress.coerceAtLeast(0)
+        if (current >= PROGRESS_MAX) {
+            done()
+            return
+        }
+        progressAnimator = ValueAnimator.ofInt(current, PROGRESS_MAX).apply {
+            duration = COMPLETE_PROGRESS_DURATION
+            addUpdateListener { animator ->
+                binding.pbSplash.progress = animator.animatedValue as Int
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    binding.pbSplash.progress = PROGRESS_MAX
+                    done()
+                }
+            })
+            start()
+        }
     }
 
     /**
@@ -25,14 +75,14 @@ abstract class BaseSplashAdActivity : BaseVBMultiActivity<KitActivitySplashBindi
     protected fun startShowSplash() {
         val adIds = getAdIds()
         if (adIds.isEmpty()) {
-            onSplashCompleted()
+            notifySplashCompleted()
             return
         }
         if (adIds.size == 1) {
             showSplashAd(adIds[0], object : AdFlowCallback {
                 override fun onClose(type: AdType, adId: String) {
                     super.onClose(type, adId)
-                    onSplashCompleted()
+                    notifySplashCompleted()
                 }
             })
             return
@@ -43,11 +93,19 @@ abstract class BaseSplashAdActivity : BaseVBMultiActivity<KitActivitySplashBindi
                 showSplashAd(adIds[1], object : AdFlowCallback {
                     override fun onClose(type: AdType, adId: String) {
                         super.onClose(type, adId)
-                        onSplashCompleted()
+                        notifySplashCompleted()
                     }
                 })
             }
         })
+    }
+
+    private fun notifySplashCompleted() {
+        if (hasNotifiedCompleted) return
+        hasNotifiedCompleted = true
+        finishWithProgress {
+            onSplashCompleted()
+        }
     }
 
     /**
@@ -64,4 +122,19 @@ abstract class BaseSplashAdActivity : BaseVBMultiActivity<KitActivitySplashBindi
      * 开屏广告展示完成（包括开关、黑名单等未展示的也会调用此方法）
      */
     protected open fun onSplashCompleted() {}
+
+    override fun onDestroy() {
+        progressAnimator?.removeAllListeners()
+        progressAnimator?.removeAllUpdateListeners()
+        progressAnimator?.cancel()
+        progressAnimator = null
+        super.onDestroy()
+    }
+
+    companion object {
+        private const val PROGRESS_MAX = 1000
+        private const val PROGRESS_HOLD = 900
+        private const val FAKE_PROGRESS_DURATION = 6000L
+        private const val COMPLETE_PROGRESS_DURATION = 300L
+    }
 }

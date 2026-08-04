@@ -1,6 +1,7 @@
 package com.adwant.kit.ui
 
 import com.adwant.kit.AdKit
+import com.adwant.kit.BuildConfig
 import com.adwant.kit.constant.KEY_AGREE_PRIVACY_POLICY
 import com.snowflake.toolkit.ext.toast
 import com.snowflake.toolkit.utils.MMKVUtil
@@ -16,16 +17,22 @@ abstract class SplashStartAdActivity : BaseSplashAdActivity() {
         super.initView()
         val isAgree = MMKVUtil.getBoolean(KEY_AGREE_PRIVACY_POLICY, false)
         if (isAgree) {
+            startFakeProgress()
             initSDK()
         } else {
             showPrivacyDialog {
+                startFakeProgress()
                 initSDK()
             }
         }
     }
 
     private fun initSDK() {
-        AdKit.instance.init(applicationContext, getAppId()) { isSuccess, msg ->
+        AdKit.instance.init(
+            applicationContext,
+            getAppId(),
+            isDebug = BuildConfig.DEBUG
+        ) { isSuccess, msg ->
             if (isSuccess) {
                 onInitSDKSuccess()
                 startShowSplash()

@@ -15,7 +15,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        initAd()
+//        initAd()
         initWeb()
     }
 
