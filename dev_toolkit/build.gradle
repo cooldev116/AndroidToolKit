@@ -78,9 +78,11 @@ dependencies {
     implementation 'androidx.startup:startup-runtime:1.2.0'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
 
-    // MSA OAID + Android_CN_OAID（与公司公共 SDK 同版本；本地 libs，避免强依赖私有 Maven）
-    implementation files('libs/oaid-2.8.0-09051400.aar')
-    implementation files('libs/Android_CN_OAID-4.2.12.aar')
+    // Android_CN_OAID（公开 JitPack 坐标，api 传递给宿主；排除需华为/荣耀私有仓的标识库）
+    api(rootProject.ext.dependencies.cnOaid) {
+        exclude group: 'com.huawei.hms', module: 'ads-identifier'
+        exclude group: 'com.hihonor.mcs', module: 'ads-identifier'
+    }
 }
 
 afterEvaluate {

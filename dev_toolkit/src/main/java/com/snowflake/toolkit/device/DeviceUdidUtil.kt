@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference
  *   4. UUID.randomUUID()（回写 miitUdid）
  * ```
  *
- * OAID 异步：多数机型约 **100ms～2s**，个别更慢或失败不回调。
+ * OAID 通过 Android_CN_OAID 异步获取：多数机型约 **100ms～2s**，个别更慢或失败不回调。
  * 隐私同意后请用 [initOaid] 的超时回调，再去打公共配置接口。
  *
  * @author Melon
@@ -78,14 +78,6 @@ object DeviceUdidUtil {
         val fromCache: Boolean,
         val timedOut: Boolean,
     )
-
-    /**
-     * 可选：注入 MSA 证书原文。不传则尝试 assets：`{packageName}.cert.pem` / `oaid.cert.pem`。
-     */
-    @JvmStatic
-    fun setMsaCert(certContent: String?) {
-        DeviceOaidHelper.setMsaCert(certContent)
-    }
 
     /**
      * 仅触发异步拉取，不等待。更推荐 [initOaid] 带超时回调的重载。
