@@ -1,8 +1,11 @@
-package com.adwant.kit
+package com.adwant.kit.ad
 
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.FragmentActivity
+import com.adwant.kit.AdFlowCallback
+import com.adwant.kit.AdKitLog
+import com.adwant.kit.AdType
 import com.bytedance.sdk.openadsdk.AdSlot
 import com.bytedance.sdk.openadsdk.TTAdNative
 import com.bytedance.sdk.openadsdk.TTAdSdk

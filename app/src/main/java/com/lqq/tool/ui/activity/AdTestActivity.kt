@@ -1,8 +1,8 @@
 package com.lqq.tool.ui.activity
 
 import com.adwant.kit.AdKit
-import com.adwant.kit.showBannerAd
-import com.adwant.kit.showNativeAd
+import com.adwant.kit.ext.showBannerAd
+import com.adwant.kit.ext.showNativeAd
 import com.lqq.tool.databinding.ActivityAdTestBinding
 import com.snowflake.toolkit.base.BaseVBActivity
 import com.snowflake.toolkit.ext.click

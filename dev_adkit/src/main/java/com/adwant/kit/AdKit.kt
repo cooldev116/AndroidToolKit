@@ -1,8 +1,15 @@
 package com.adwant.kit
 
+import android.app.Application
 import android.content.Context
 import android.view.ViewGroup
 import androidx.fragment.app.FragmentActivity
+import com.adwant.kit.ad.BannerAd
+import com.adwant.kit.ad.InterstitialAd
+import com.adwant.kit.ad.NativeAd
+import com.adwant.kit.ad.RewardVideoAd
+import com.adwant.kit.ad.SplashAd
+import com.adwant.kit.ui.SplashBackendAdActivity
 import com.adwant.kit.utils.ScreenUtils
 import com.bytedance.sdk.openadsdk.TTAdConfig
 import com.bytedance.sdk.openadsdk.TTAdSdk
@@ -34,11 +41,10 @@ class AdKit private constructor() {
      */
     private var isInit = false
 
-    companion object {
-        val instance by lazy {
-            AdKit()
-        }
-    }
+    /**
+     * 后台开屏监听（只启用一次）
+     */
+    private var splashBackendWatcher: SplashBackendWatcher? = null
 
     /**
      * 初始化
@@ -65,6 +71,26 @@ class AdKit private constructor() {
                 callback?.invoke(false, "$code:$msg")
             }
         })
+    }
+
+    /**
+     * 启用后台开屏：退出后台达到 [thresholdMs] 后再回前台时，启动 [splashActivityClass]。
+     * 一般由 [com.adwant.kit.ui.SplashStartAdActivity] 在 SDK 初始化成功后自动调用；重复调用无效。
+     */
+    fun enableBackendSplash(
+        application: Application,
+        splashActivityClass: Class<out SplashBackendAdActivity>,
+        thresholdMs: Long = AdConfig.BACKEND_SPLASH_THRESHOLD_MS
+    ) {
+        if (splashBackendWatcher != null) {
+            AdKitLog.i("enableBackendSplash ignored, already enabled")
+            return
+        }
+        splashBackendWatcher = SplashBackendWatcher(
+            application = application,
+            splashActivityClass = splashActivityClass,
+            thresholdMs = thresholdMs
+        ).also { it.start() }
     }
 
     /**
@@ -113,7 +139,7 @@ class AdKit private constructor() {
         adId: String,
         callback: AdFlowCallback? = null
     ) {
-        if (!isAllowShowAd) return
+        if (!checkAllowShowAd(AdType.SPLASH, adId, callback)) return
         SplashAd(adId, callback).show(activity)
     }
 
@@ -125,7 +151,8 @@ class AdKit private constructor() {
         adId: String,
         callback: AdFlowCallback? = null
     ) {
-        if (!isAllowShowAd) return
+        if (!checkAllowShowAd(AdType.INTERSTITIAL, adId, callback)) return
+        if (!checkInterstitialMaxCount(adId, callback)) return
         InterstitialAd(adId, callback).show(activity)
     }
 
@@ -140,7 +167,7 @@ class AdKit private constructor() {
         height: Int = ScreenUtils.dpToPx(activity, 50f),
         callback: AdFlowCallback? = null
     ) {
-        if (!isAllowShowAd) return
+        if (!checkAllowShowAd(AdType.BANNER, adId, callback)) return
         BannerAd(adId, callback).show(activity, bannerContainer, width, height)
     }
 
@@ -155,7 +182,7 @@ class AdKit private constructor() {
         height: Int,
         callback: AdFlowCallback? = null
     ) {
-        if (!isAllowShowAd) return
+        if (!checkAllowShowAd(AdType.NATIVE, adId, callback)) return
         NativeAd(adId, callback).show(activity, nativeContainer, width, height)
     }
 
@@ -167,8 +194,37 @@ class AdKit private constructor() {
         adId: String,
         callback: AdFlowCallback? = null
     ) {
-        if (!isAllowShowAd) return
+        if (!checkAllowShowAd(AdType.REWARD, adId, callback)) return
         RewardVideoAd(adId, callback).show(activity)
+    }
+
+    /**
+     * 不允许展示时走失败回调，上层扩展可统一映射到 onClose。
+     */
+    private fun checkAllowShowAd(
+        type: AdType,
+        adId: String,
+        callback: AdFlowCallback?
+    ): Boolean {
+        if (isAllowShowAd) return true
+        AdKitLog.i("isAllowShowAd=false, skip show, type=$type, adId=$adId")
+        callback?.onLoadFail(type, adId, null, MSG_NOT_ALLOW_SHOW_AD)
+        return false
+    }
+
+    /**
+     * 插屏达到最大展示次数时不再请求/展示。
+     */
+    private fun checkInterstitialMaxCount(
+        adId: String,
+        callback: AdFlowCallback?
+    ): Boolean {
+        if (showedInterstitialCount < AdConfig.DEFAULT_MAX_INTERSTITIAL) return true
+        AdKitLog.i(
+            "interstitial max reached: $showedInterstitialCount/${AdConfig.DEFAULT_MAX_INTERSTITIAL}, skip show, adId=$adId"
+        )
+        callback?.onLoadFail(AdType.INTERSTITIAL, adId, null, MSG_INTERSTITIAL_MAX_REACHED)
+        return false
     }
 
     /**
@@ -181,7 +237,26 @@ class AdKit private constructor() {
     }
 
     /**
+     * 重置插屏已展示次数，使本进程内可重新累计至上限。
+     * 一般在应用退到后台时由 [SplashBackendWatcher] 自动调用。
+     */
+    fun resetShowInterstitialCount() {
+        if (showedInterstitialCount == 0) return
+        AdKitLog.i("resetShowInterstitialCount: $showedInterstitialCount -> 0")
+        showedInterstitialCount = 0
+    }
+
+    /**
      * 获取已经展示插屏次数
      */
     fun getShowInterstitialCount() = showedInterstitialCount
+
+    companion object {
+        const val MSG_NOT_ALLOW_SHOW_AD = "不允许展示广告"
+        const val MSG_INTERSTITIAL_MAX_REACHED = "插屏已达最大展示次数"
+
+        val instance by lazy {
+            AdKit()
+        }
+    }
 }

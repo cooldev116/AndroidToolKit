@@ -1,6 +1,7 @@
 package com.lqq.tool.ui.activity
 
 import com.adwant.kit.inter.ISplashStyle
+import com.adwant.kit.ui.SplashBackendAdActivity
 import com.adwant.kit.ui.SplashStartAdActivity
 import com.lqq.tool.impl.SplashStyle
 import com.snowflake.toolkit.device.DeviceUdidUtil
@@ -17,6 +18,10 @@ class SplashActivity : SplashStartAdActivity() {
 
     override fun getAppId(): String {
         return "5794264"
+    }
+
+    override fun getBackendSplashActivityClass(): Class<out SplashBackendAdActivity> {
+        return SplashBackendActivity::class.java
     }
 
     override fun showPrivacyDialog(next: () -> Unit) {

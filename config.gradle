@@ -21,6 +21,7 @@ ext {
             //----------- Jetpack----------------
             viewModelKtx                 : "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.0",
             liveDataKtx                  : "androidx.lifecycle:lifecycle-livedata-ktx:2.4.0",
+            lifecycleProcess             : "androidx.lifecycle:lifecycle-process:2.5.0",
             activity                     : "androidx.activity:activity:1.3.1",
             activityKtx                  : "androidx.activity:activity-ktx:1.3.1",
             fragment                     : "androidx.fragment:fragment:1.3.1",

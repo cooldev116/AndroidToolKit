@@ -1,6 +1,10 @@
-package com.adwant.kit
+package com.adwant.kit.ad
 
 import androidx.fragment.app.FragmentActivity
+import com.adwant.kit.AdFlowCallback
+import com.adwant.kit.AdKit
+import com.adwant.kit.AdKitLog
+import com.adwant.kit.AdType
 import com.bytedance.sdk.openadsdk.AdSlot
 import com.bytedance.sdk.openadsdk.TTAdConstant
 import com.bytedance.sdk.openadsdk.TTAdNative
@@ -56,7 +60,7 @@ class InterstitialAd(
             override fun onAdShow() {
                 AdKitLog.i("onAdShow")
                 callback?.onShow(AdType.INTERSTITIAL, adId)
-                AdKit.instance.setShowInterstitialCount()
+                AdKit.Companion.instance.setShowInterstitialCount()
             }
 
             override fun onAdVideoBarClick() {

@@ -58,6 +58,7 @@ dependencies {
 
     implementation rootProject.ext.dependencies.viewModelKtx
     implementation rootProject.ext.dependencies.liveDataKtx
+    implementation rootProject.ext.dependencies.lifecycleProcess
     implementation rootProject.ext.dependencies.activity
     implementation rootProject.ext.dependencies.activityKtx
     implementation rootProject.ext.dependencies.fragment

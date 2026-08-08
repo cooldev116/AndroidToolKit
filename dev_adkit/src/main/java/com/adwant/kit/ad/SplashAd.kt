@@ -1,8 +1,12 @@
-package com.adwant.kit
+package com.adwant.kit.ad
 
+import android.R
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.fragment.app.FragmentActivity
+import com.adwant.kit.AdFlowCallback
+import com.adwant.kit.AdKitLog
+import com.adwant.kit.AdType
 import com.adwant.kit.utils.ScreenUtils
 import com.bytedance.sdk.openadsdk.AdSlot
 import com.bytedance.sdk.openadsdk.CSJAdError
@@ -92,7 +96,7 @@ class SplashAd(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
         )
-        val rootView = activity.findViewById<FrameLayout>(android.R.id.content)
+        val rootView = activity.findViewById<FrameLayout>(R.id.content)
         rootView.addView(container, params)
         return container
     }

@@ -4,11 +4,9 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.view.animation.DecelerateInterpolator
-import com.adwant.kit.AdFlowCallback
-import com.adwant.kit.AdType
 import com.adwant.kit.databinding.KitActivitySplashBinding
 import com.adwant.kit.inter.ISplashStyle
-import com.adwant.kit.showSplashAd
+import com.adwant.kit.ext.showSplashAd
 import com.snowflake.toolkit.base.BaseVBMultiActivity
 
 /**
@@ -79,25 +77,16 @@ abstract class BaseSplashAdActivity : BaseVBMultiActivity<KitActivitySplashBindi
             return
         }
         if (adIds.size == 1) {
-            showSplashAd(adIds[0], object : AdFlowCallback {
-                override fun onClose(type: AdType, adId: String) {
-                    super.onClose(type, adId)
-                    notifySplashCompleted()
-                }
-            })
+            showSplashAd(adIds[0]) { _, _ ->
+                notifySplashCompleted()
+            }
             return
         }
-        showSplashAd(adIds[0], object : AdFlowCallback {
-            override fun onClose(type: AdType, adId: String) {
-                super.onClose(type, adId)
-                showSplashAd(adIds[1], object : AdFlowCallback {
-                    override fun onClose(type: AdType, adId: String) {
-                        super.onClose(type, adId)
-                        notifySplashCompleted()
-                    }
-                })
+        showSplashAd(adIds[0]) { _, _ ->
+            showSplashAd(adIds[1]) { _, _ ->
+                notifySplashCompleted()
             }
-        })
+        }
     }
 
     private fun notifySplashCompleted() {
