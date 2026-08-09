@@ -8,7 +8,7 @@ plugins {
 ext {
     PUBLISH_GROUP_ID = 'io.github.cooldev116'
     PUBLISH_ARTIFACT_ID = 'dev-toolkit'
-    PUBLISH_VERSION = '1.0.1'
+    PUBLISH_VERSION = '1.0.3'
 }
 
 android {
@@ -77,6 +77,13 @@ dependencies {
     implementation rootProject.ext.dependencies.mmkv
     implementation 'androidx.startup:startup-runtime:1.2.0'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+
+    // 网络：api 传递 Retrofit，便于宿主定义 ApiService 接口
+    api rootProject.ext.dependencies.retrofit
+    api rootProject.ext.dependencies.converterGson
+    implementation rootProject.ext.dependencies.loggingInterceptor
+    // Timber：api 传递，宿主可直接 Timber.d；关键节点日志依赖此库
+    api rootProject.ext.dependencies.timber
 
     // Android_CN_OAID（公开 JitPack 坐标，api 传递给宿主；排除需华为/荣耀私有仓的标识库）
     api(rootProject.ext.dependencies.cnOaid) {

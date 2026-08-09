@@ -29,7 +29,7 @@ class AdKit private constructor() {
     /**
      * 是否允许展示广告
      */
-    private var isAllowShowAd = true
+    private var isAllowShowAd = false
 
     /**
      * 已经展示插屏次数
@@ -45,6 +45,11 @@ class AdKit private constructor() {
      * 后台开屏监听（只启用一次）
      */
     private var splashBackendWatcher: SplashBackendWatcher? = null
+
+    /**
+     * 后台插屏监听（只启用一次）
+     */
+    private var backendInterstitialWatcher: BackendInterstitialWatcher? = null
 
     /**
      * 初始化
@@ -89,6 +94,29 @@ class AdKit private constructor() {
         splashBackendWatcher = SplashBackendWatcher(
             application = application,
             splashActivityClass = splashActivityClass,
+            thresholdMs = thresholdMs
+        ).also { it.start() }
+    }
+
+    /**
+     * 启用后台插屏：退出后台停留超过 [thresholdMs]（默认 5 秒）后再回前台时，
+     * 若当前页不是 [SplashBackendAdActivity]，则按双插屏顺序展示 [firstId]、[secondId]。
+     * 重复调用无效。
+     */
+    fun enableBackendInterstitial(
+        application: Application,
+        firstId: String,
+        secondId: String,
+        thresholdMs: Long = AdConfig.BACKEND_INTERSTITIAL_THRESHOLD_MS
+    ) {
+        if (backendInterstitialWatcher != null) {
+            AdKitLog.i("enableBackendInterstitial ignored, already enabled")
+            return
+        }
+        backendInterstitialWatcher = BackendInterstitialWatcher(
+            application = application,
+            firstId = firstId,
+            secondId = secondId,
             thresholdMs = thresholdMs
         ).also { it.start() }
     }
@@ -199,7 +227,8 @@ class AdKit private constructor() {
     }
 
     /**
-     * 不允许展示时走失败回调，上层扩展可统一映射到 onClose。
+     * 不允许展示时走 onLoadFail，msg 为 [MSG_NOT_ALLOW_SHOW_AD]；
+     * 上层 [com.adwant.kit.ext.wrapAdCloseCallback] 会映射为 onClose(true, msg)。
      */
     private fun checkAllowShowAd(
         type: AdType,

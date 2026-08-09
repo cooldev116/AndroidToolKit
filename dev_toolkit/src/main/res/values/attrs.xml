@@ -23,4 +23,12 @@
         <!--        右侧自定义布局-->
         <attr name="app_bar_right_custom_layout" format="reference" />
     </declare-styleable>
+
+    <!-- TextView 可点击链接：主题可挂 style，统一默认颜色 -->
+    <attr name="textLinkBuilderStyle" format="reference" />
+
+    <declare-styleable name="TextLinkBuilder">
+        <attr name="defaultLinkColor" format="color" />
+        <attr name="defaultTextColorOfHighlightedLink" format="color" />
+    </declare-styleable>
 </resources>

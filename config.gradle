@@ -49,6 +49,8 @@ ext {
             converterGson                : 'com.squareup.retrofit2:converter-gson:2.9.0',
             // okhttp3 日志拦截器
             loggingInterceptor           : 'com.squareup.okhttp3:logging-interceptor:4.8.0',
+            // 日志 https://github.com/JakeWharton/timber
+            timber                       : 'com.jakewharton.timber:timber:5.0.1',
 
             //---------------图片相关------------------
             glide                        : 'com.github.bumptech.glide:glide:4.11.0',

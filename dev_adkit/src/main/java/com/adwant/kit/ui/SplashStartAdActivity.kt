@@ -25,6 +25,7 @@ abstract class SplashStartAdActivity : BaseSplashAdActivity() {
             initSDK()
         } else {
             showPrivacyDialog {
+                MMKVUtil.save(KEY_AGREE_PRIVACY_POLICY, true)
                 startFakeProgress()
                 initSDK()
             }

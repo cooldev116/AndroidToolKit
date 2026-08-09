@@ -14,6 +14,16 @@
         android:theme="@style/Theme.AndroidToolKit"
         tools:replace="android:allowBackup"
         tools:targetApi="31">
+
+        <!-- NetRepository.buildApi 读取的 API 根地址，值由 Gradle manifestPlaceholders.API_URL 注入 -->
+        <meta-data
+            android:name="API_URL"
+            android:value="${API_URL}" />
+        <!-- 公共请求头 channel，值由 Gradle manifestPlaceholders.CHANNEL 注入 -->
+        <meta-data
+            android:name="CHANNEL"
+            android:value="${CHANNEL}" />
+
         <activity
             android:name=".ui.activity.SplashActivity"
             android:exported="true"

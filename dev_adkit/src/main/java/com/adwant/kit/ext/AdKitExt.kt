@@ -7,14 +7,17 @@ import androidx.fragment.app.FragmentActivity
 import com.adwant.kit.AbsAdFlowCallback
 import com.adwant.kit.AdFlowCallback
 import com.adwant.kit.AdKit
+import com.adwant.kit.AdKitLog
 import com.adwant.kit.AdType
+import com.adwant.kit.ui.SplashBackendAdActivity
 import com.adwant.kit.utils.ScreenUtils
 
 /**
  * 广告展示扩展方法
  *
  * [onClose] 统一出口：
- * - 请求/渲染失败、isAllowShowAd=false → (false, msg)
+ * - isAllowShowAd=false → (true, msg)，视为可继续业务流程
+ * - 请求/渲染失败 → (false, msg)
  * - 广告真正关闭 → (false, null)；激励视频关闭 → (verify, null)
  */
 
@@ -118,8 +121,8 @@ fun Fragment.showBannerAd(
 fun FragmentActivity.showNativeAd(
     adId: String,
     container: ViewGroup,
-    width: Int = ScreenUtils.getScreenWidth(this),
     height: Int,
+    width: Int = ScreenUtils.getScreenWidth(this),
     callback: AdFlowCallback? = null,
     onClose: ((Boolean, String?) -> Unit)? = null
 ) {
@@ -139,8 +142,8 @@ fun FragmentActivity.showNativeAd(
 fun Fragment.showNativeAd(
     adId: String,
     container: ViewGroup,
-    width: Int = ScreenUtils.getScreenWidth(requireContext()),
     height: Int,
+    width: Int = ScreenUtils.getScreenWidth(requireContext()),
     callback: AdFlowCallback? = null,
     onClose: ((Boolean, String?) -> Unit)? = null
 ) {
@@ -202,9 +205,10 @@ fun FragmentActivity.showSwitchNInterstitial(
     callback: AdFlowCallback? = null,
     onClose: ((Boolean, String?) -> Unit)? = null
 ) {
-    val threshold = interval.coerceAtLeast(1)
-    switchCount++
-    if (switchCount < threshold) return
+    if (switchCount <= 0 || switchCount % interval != 0) {
+        switchCount++
+        return
+    }
     switchCount = 0
     showInterstitialAd(adId, callback, onClose)
 }
@@ -219,6 +223,28 @@ fun Fragment.showSwitchNInterstitial(
     onClose: ((Boolean, String?) -> Unit)? = null
 ) {
     requireActivity().showSwitchNInterstitial(adId, interval, callback, onClose)
+}
+
+/**
+ * 展示双插屏
+ */
+fun FragmentActivity.showDoubleInterstitialAd(firstId: String, secondId: String) {
+    showInterstitialAd(firstId) { _, _ ->
+        showInterstitialAd(secondId)
+    }
+}
+
+/**
+ * 展示后台插屏（用法同 [showDoubleInterstitialAd]）。
+ * 当前页为 [SplashBackendAdActivity] 时不展示，避免与后台开屏叠弹。
+ * 时长判断由 [com.adwant.kit.BackendInterstitialWatcher] 负责：后台停留大于 5 秒才调用本方法。
+ */
+fun FragmentActivity.showBackendInterstitialAd(firstId: String, secondId: String) {
+    if (this is SplashBackendAdActivity) {
+        AdKitLog.d("skip showBackendInterstitialAd, on SplashBackendAdActivity")
+        return
+    }
+    showDoubleInterstitialAd(firstId, secondId)
 }
 
 /**
@@ -252,7 +278,9 @@ internal fun wrapAdCloseCallback(
 
         override fun onLoadFail(type: AdType, adId: String, code: Int?, msg: String?) {
             callback?.onLoadFail(type, adId, code, msg)
-            dispatchClose(false, msg)
+            // 不允许展示广告时第一个参数为 true，避免上层把「跳过广告」当成失败阻断
+            val success = msg == AdKit.MSG_NOT_ALLOW_SHOW_AD
+            dispatchClose(success, msg)
         }
 
         override fun onRenderSuccess(type: AdType, adId: String) {

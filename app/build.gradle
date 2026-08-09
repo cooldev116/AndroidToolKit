@@ -18,6 +18,11 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+        // 宿主注入 API 根地址与渠道，供清单 meta-data 与 NetRepository 读取
+        manifestPlaceholders = [
+                API_URL: "https://www.wanandroid.com/",
+                CHANNEL: "test"
+        ]
     }
 
     buildTypes {
