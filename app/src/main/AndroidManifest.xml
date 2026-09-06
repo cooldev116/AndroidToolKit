@@ -42,6 +42,7 @@
             android:theme="@style/Theme.AndroidToolKit" />
         <activity android:name=".ui.activity.MainActivity" />
         <activity android:name=".ui.activity.AdTestActivity" />
+        <activity android:name=".ui.activity.PageHelperActivity" />
     </application>
 
 </manifest>

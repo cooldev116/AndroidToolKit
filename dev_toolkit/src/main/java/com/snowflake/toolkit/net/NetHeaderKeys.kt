@@ -8,7 +8,7 @@ package com.snowflake.toolkit.net
  */
 object NetHeaderKeys {
     const val PACKAGE_NAME = "packageName"
-    const val VERSION = "version"
+    const val VERSION_NAME = "versionName"
     const val VERSION_CODE = "versionCode"
     const val CHANNEL = "channel"
     const val UDID = "udid"

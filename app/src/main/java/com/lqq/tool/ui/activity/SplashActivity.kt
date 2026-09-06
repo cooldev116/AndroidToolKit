@@ -16,10 +16,6 @@ class SplashActivity : SplashStartAdActivity() {
         return listOf("103928850", "103928850")
     }
 
-    override fun getAppId(): String {
-        return "5794264"
-    }
-
     override fun getBackendSplashActivityClass(): Class<out SplashBackendAdActivity> {
         return SplashBackendActivity::class.java
     }

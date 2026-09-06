@@ -72,6 +72,7 @@ ext {
             rWidgetHelper                : 'com.github.RuffianZhong:RWidgetHelper:androidx.v0.0.14',
             mmvk                         : 'com.tencent:mmkv:1.2.13',
             //基类、工具库
-            toolkit                      : 'io.github.cooldev116:dev-toolkit:1.0.1'
+            toolkit                      : 'io.github.cooldev116:dev-toolkit:1.0.1',
+            agentWeb                     : 'com.github.Justson.AgentWeb:agentweb-core:5.1.6-androidx'
     ]
 }

@@ -11,6 +11,8 @@ import timber.log.Timber
  * 若 [TokenManager] 中有 token，再附加 `Authorization: Bearer xxx`。
  * udid / token 每次现取，登录或 OAID 就绪后后续请求即可生效，无需重建 OkHttp。
  *
+ * 部分接口（如隐私同意前可访问的 legal）不能带 udid，见 [NO_UDID_PATHS]。
+ *
  * @author Melon
  * @date 2026/8/9
  */
@@ -19,14 +21,19 @@ class HeaderInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
         val hasToken = TokenManager.hasToken()
+        val path = original.url.encodedPath
         val builder = original.newBuilder()
             .header(NetHeaderKeys.PACKAGE_NAME, AppInfoUtil.getPackageName())
-            .header(NetHeaderKeys.VERSION, AppInfoUtil.getVersionName())
+            .header(NetHeaderKeys.VERSION_NAME, AppInfoUtil.getVersionName())
             .header(NetHeaderKeys.VERSION_CODE, AppInfoUtil.getVersionCode().toString())
             .header(NetHeaderKeys.CHANNEL, AppInfoUtil.getChannel())
-            .header(NetHeaderKeys.UDID, DeviceUdidUtil.getMd5Udid())
             .header(NetHeaderKeys.PLATFORM, NetHeaderKeys.PLATFORM_ANDROID)
             .method(original.method, original.body)
+
+        // 隐私同意前可访问的接口不传 udid，避免未授权采集设备标识
+        if (path !in NO_UDID_PATHS) {
+            builder.header(NetHeaderKeys.UDID, DeviceUdidUtil.getMd5Udid())
+        }
 
         // 未登录不加 Authorization，避免出现空的 Bearer
         TokenManager.getAuthorizationHeader()?.let { authorization ->
@@ -69,5 +76,13 @@ class HeaderInterceptor : Interceptor {
 
     companion object {
         private const val TAG = "NetHeader"
+
+        /**
+         * 不附加 udid 的接口 path（与 [ToolkitApi] 等声明保持一致）。
+         * 后续若有同类「同意前可请求」接口，直接往集合追加即可。
+         */
+        private val NO_UDID_PATHS = setOf(
+            ToolkitPaths.LEGAL,
+        )
     }
 }

@@ -59,4 +59,15 @@
     <string name="common_permission_ignore_battery_optimize">忽略电池优化权限</string>
     <string name="common_permission_picture_in_picture">画中画权限</string>
     <string name="common_permission_vpn">\tVPN\t权限</string>
+
+    <string name="toolkit_feedback_title">意见反馈</string>
+    <string name="toolkit_feedback_content_label">反馈内容</string>
+    <string name="toolkit_feedback_content_hint">请描述你遇到的问题或建议</string>
+    <string name="toolkit_feedback_contact_label">联系方式（选填）</string>
+    <string name="toolkit_feedback_contact_hint">手机号或邮箱</string>
+    <string name="toolkit_feedback_contact_tip">填写后便于我们与你联系，仅支持手机号或邮箱</string>
+    <string name="toolkit_feedback_submit">提交</string>
+
+    <string name="toolkit_about_title">关于我们</string>
+    <string name="toolkit_about_version_format">v%1$s</string>
 </resources>

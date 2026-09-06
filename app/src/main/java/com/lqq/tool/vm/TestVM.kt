@@ -1,6 +1,7 @@
 package com.lqq.tool.vm
 
 import com.lqq.tool.bean.BannerBean
+import com.lqq.tool.bean.PageBean
 import com.lqq.tool.net.ApiService
 import com.snowflake.toolkit.base.BaseViewModel
 import com.snowflake.toolkit.ext.launch
@@ -33,11 +34,19 @@ class TestVM : BaseViewModel() {
                 if (response.isSuccess()) {
                     bannerResult.postSuccess(response.data.orEmpty())
                 } else {
-                    bannerResult.postFailure(response.errorMsg, response.errorCode)
+                    bannerResult.postFailure(response.message, response.code)
                 }
             } finally {
                 loadingStatus.postValue(false)
             }
+        }
+    }
+
+    fun getArticleList() {
+        launch {
+            val api = NetRepository.instance.buildApi(ApiService::class.java)
+            val request = PageBean(1)
+            val response = api.getArticleList(request)
         }
     }
 }

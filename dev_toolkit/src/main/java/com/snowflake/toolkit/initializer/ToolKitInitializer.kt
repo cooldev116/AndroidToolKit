@@ -3,6 +3,7 @@ package com.snowflake.toolkit.initializer
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import androidx.startup.Initializer
+import com.snowflake.toolkit.helper.PageJumpHelper
 import com.snowflake.toolkit.manger.ToolKitManager
 import timber.log.Timber
 import java.util.Collections
@@ -16,6 +17,7 @@ class ToolKitInitializer : Initializer<ToolKitManager> {
     override fun create(context: Context): ToolKitManager {
         ToolKitManager.instance.init(context)
         plantTimberIfNeeded(context)
+        PageJumpHelper.preloadLegal()
         return ToolKitManager.instance
     }
 

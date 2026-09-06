@@ -20,7 +20,7 @@ android {
         }
         // 宿主注入 API 根地址与渠道，供清单 meta-data 与 NetRepository 读取
         manifestPlaceholders = [
-                API_URL: "https://www.wanandroid.com/",
+                API_URL: "http://159.75.131.186:80",
                 CHANNEL: "test"
         ]
     }

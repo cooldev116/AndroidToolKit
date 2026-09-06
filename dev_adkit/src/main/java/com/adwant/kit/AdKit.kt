@@ -160,7 +160,7 @@ class AdKit private constructor() {
     }
 
     /**
-     * 展示闪屏广告
+     * 展示闪屏广告（加载成功后立即展示）
      */
     fun showSplashAd(
         activity: FragmentActivity,
@@ -169,6 +169,20 @@ class AdKit private constructor() {
     ) {
         if (!checkAllowShowAd(AdType.SPLASH, adId, callback)) return
         SplashAd(adId, callback).show(activity)
+    }
+
+    /**
+     * 预加载开屏广告，不立即展示。
+     * 返回 [SplashAd] 句柄，调用方在适当时机执行 [SplashAd.showPreloaded]；
+     * 不允许展示时走 onLoadFail 并返回 null。
+     */
+    fun preloadSplashAd(
+        activity: FragmentActivity,
+        adId: String,
+        callback: AdFlowCallback? = null
+    ): SplashAd? {
+        if (!checkAllowShowAd(AdType.SPLASH, adId, callback)) return null
+        return SplashAd(adId, callback).also { it.preload(activity) }
     }
 
     /**

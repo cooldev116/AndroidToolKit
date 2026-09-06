@@ -2,13 +2,14 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
     id 'maven-publish'
-    id 'signing'
 }
 
 ext {
     PUBLISH_GROUP_ID = 'io.github.cooldev116'
     PUBLISH_ARTIFACT_ID = 'dev-adkit'
-    PUBLISH_VERSION = '1.0.5'
+    PUBLISH_VERSION = '1.1.0'
+    // 与 settings.gradle 依赖解析路径一致，仅本机本地仓
+    LOCAL_MAVEN_URL = uri('E:/MavenRepo')
 }
 
 android {
@@ -67,7 +68,7 @@ dependencies {
     implementation rootProject.ext.dependencies.autoSize
     implementation rootProject.ext.dependencies.immersionbar
     implementation rootProject.ext.dependencies.immersionbarKtx
-    implementation rootProject.ext.dependencies.toolkit
+    implementation project(':dev_toolkit')
 
     implementation 'com.pangle_beta.cn:mediation-sdk:7.4.2.0' //穿山甲融合SDK
     implementation 'com.pangle_beta.cn:mediation-test-tools:7.4.1.4' //穿山甲融合测试工具
@@ -98,112 +99,22 @@ afterEvaluate {
                 pom {
                     name = 'Dev AdKit'
                     description = '广告封装'
-                    url = 'https://github.com/cooldev116/AndroidToolKit'
-                    inceptionYear = '2025'
-
-                    licenses {
-                        license {
-                            name = 'The Apache License, Version 2.0'
-                            url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution = 'repo'
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id = 'cooldev116'
-                            name = 'cooldev116'
-                            email = '495776706@qq.com'
-                            url = 'https://github.com/cooldev116'
-                        }
-                    }
-
-                    scm {
-                        connection = 'scm:git:git://github.com/cooldev116/AndroidToolKit.git'
-                        developerConnection = 'scm:git:ssh://github.com/cooldev116/AndroidToolKit.git'
-                        url = 'https://github.com/cooldev116/AndroidToolKit'
-                    }
                 }
             }
         }
 
         repositories {
             maven {
-                name = 'MavenCentral'
-                url = uri('https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/')
-                credentials {
-                    username = findProperty('mavenCentralUsername') ?: ''
-                    password = findProperty('mavenCentralPassword') ?: ''
-                }
+                name = 'LocalMaven'
+                url = LOCAL_MAVEN_URL
             }
         }
-    }
-
-    signing {
-        def keyFilePath = findProperty('signingKeyFile')?.toString()
-        def inMemoryKey = findProperty('signingInMemoryKey')?.toString()
-        def keyId = findProperty('signingInMemoryKeyId')?.toString()
-        def keyPassword = findProperty('signingInMemoryKeyPassword')?.toString() ?: ''
-
-        def key = null
-        if (keyFilePath) {
-            def keyFile = file(keyFilePath)
-            if (!keyFile.exists()) {
-                throw new GradleException("signingKeyFile not found: ${keyFilePath}")
-            }
-            key = keyFile.getText('UTF-8')
-        } else if (inMemoryKey) {
-            key = inMemoryKey.replace('\\n', '\n')
-        }
-
-        if (key) {
-            if (keyId) {
-                useInMemoryPgpKeys(keyId, key, keyPassword)
-            } else {
-                useInMemoryPgpKeys(key, keyPassword)
-            }
-        }
-
-        required { true }
-        sign publishing.publications.release
     }
 }
 
-tasks.register('notifyCentralPortal') {
+// 发布到本机本地 Maven（E:/MavenRepo），不上传远端
+tasks.register('publishToLocalMaven') {
     group = 'publishing'
-    description = 'Notify Central Portal after publishing so the deployment becomes visible'
-
-    doLast {
-        def username = findProperty('mavenCentralUsername')
-        def password = findProperty('mavenCentralPassword')
-        if (!username || !password) {
-            throw new GradleException('Missing mavenCentralUsername / mavenCentralPassword in ~/.gradle/gradle.properties')
-        }
-
-        def auth = "${username}:${password}".bytes.encodeBase64().toString()
-        def url = new URL("https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${PUBLISH_GROUP_ID}")
-        def conn = url.openConnection()
-        conn.requestMethod = 'POST'
-        conn.setRequestProperty('Authorization', "Basic ${auth}")
-        conn.doOutput = true
-        conn.outputStream.close()
-
-        def code = conn.responseCode
-        if (code < 200 || code >= 300) {
-            def errorBody = ''
-            try {
-                errorBody = conn.errorStream?.text
-            } catch (ignored) {
-            }
-            throw new GradleException("Failed to notify Central Portal: HTTP ${code} ${errorBody}")
-        }
-        println "Central Portal notified for ${PUBLISH_GROUP_ID}. Open https://central.sonatype.com/publishing/deployments and click Publish."
-    }
-}
-
-tasks.register('publishToMavenCentral') {
-    group = 'publishing'
-    description = 'Publish release to Maven Central staging and notify Central Portal'
-    dependsOn 'publishReleasePublicationToMavenCentralRepository', 'notifyCentralPortal'
-    tasks.findByName('notifyCentralPortal')?.mustRunAfter('publishReleasePublicationToMavenCentralRepository')
+    description = 'Publish release to local Maven repo (E:/MavenRepo)'
+    dependsOn 'publishReleasePublicationToLocalMavenRepository'
 }

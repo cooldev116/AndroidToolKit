@@ -24,7 +24,10 @@ class MainActivity : BaseVMActivity<ActivityMainBinding, TestVM>() {
         private const val TAG = "NetTest"
     }
 
-    private val list = mutableListOf(MainBean("广告测试", AdTestActivity::class.java))
+    private val list = mutableListOf(
+        MainBean("广告测试", AdTestActivity::class.java),
+        MainBean("PageJumpHelper", PageHelperActivity::class.java)
+    )
     private val listAdapter = MainAdapter()
 
     override fun initView() {
@@ -48,7 +51,7 @@ class MainActivity : BaseVMActivity<ActivityMainBinding, TestVM>() {
 
     override fun initData() {
         super.initData()
-        viewModel.fetchBanner()
+        viewModel.getArticleList()
     }
 
     override fun subscribeData() {

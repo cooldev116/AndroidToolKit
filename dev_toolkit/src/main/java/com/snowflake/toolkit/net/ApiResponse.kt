@@ -15,16 +15,16 @@ package com.snowflake.toolkit.net
  * suspend fun getArticles(): ApiResponse<Paging<ArticleBean>>
  * ```
  *
- * 约定：[errorCode] == 0 为业务成功（与玩 Android 等常见风格一致，宿主也可按自身后端调整判断）。
+ * 约定：[code] == 0 为业务成功（与玩 Android 等常见风格一致，宿主也可按自身后端调整判断）。
  *
  * @author Melon
  * @date 2026/8/9
  */
 data class ApiResponse<T>(
-    val errorCode: Int,
-    val errorMsg: String?,
+    val code: Int,
+    val message: String?,
     val data: T?,
 ) {
     /** 是否业务成功 */
-    fun isSuccess(): Boolean = errorCode == 0
+    fun isSuccess(): Boolean = code == 0
 }

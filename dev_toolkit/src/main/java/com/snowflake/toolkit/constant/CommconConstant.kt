@@ -9,3 +9,9 @@ package com.snowflake.toolkit.constant
 const val EXTRA_KEY_BUNDLE = "extra_key_bundle"
 
 const val EXTRA_KEY_BEAN = "extra_key_bean"
+
+const val EXTRA_KEY_TITLE = "extra_key_title"
+
+const val EXTRA_KEY_URL = "extra_key_url"
+
+const val EXTRA_KEY_CONTENT = "extra_key_content"
