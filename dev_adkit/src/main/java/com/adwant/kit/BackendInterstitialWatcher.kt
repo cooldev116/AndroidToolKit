@@ -16,12 +16,13 @@ import java.lang.ref.WeakReference
 
 /**
  * 监听应用前后台：退出后台停留时长超过 [thresholdMs]（默认 5 秒）后再回前台时，
- * 若当前页不是 [SplashBackendAdActivity]，则在前台 Activity 上展示后台插屏。
+ * 在前台 Activity 上按 [adIds] 顺序依次展示插屏。
+ *
+ * 与后台开屏并存时：等 [SplashBackendAdActivity] finish 后再展示，避免叠弹。
  */
 internal class BackendInterstitialWatcher(
     private val application: Application,
-    private val firstId: String,
-    private val secondId: String,
+    private val adIds: List<String>,
     private val thresholdMs: Long
 ) : DefaultLifecycleObserver, Application.ActivityLifecycleCallbacks {
 
@@ -40,7 +41,7 @@ internal class BackendInterstitialWatcher(
         application.registerActivityLifecycleCallbacks(this)
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         AdKitLog.i(
-            "BackendInterstitialWatcher started, firstId=$firstId, secondId=$secondId, thresholdMs=$thresholdMs"
+            "BackendInterstitialWatcher started, adIds=$adIds, thresholdMs=$thresholdMs"
         )
     }
 
@@ -63,25 +64,38 @@ internal class BackendInterstitialWatcher(
             )
             return
         }
-        // 等当前 Activity 生命周期回调跑完，再取前台页判断是否可弹插屏
-        mainHandler.post { tryShowBackendInterstitial() }
+        // 再 post 一帧，保证同一次回前台时 SplashBackendWatcher 先标记 / 拉起开屏
+        mainHandler.post {
+            mainHandler.post { tryShowBackendInterstitial() }
+        }
     }
 
     /**
-     * 回前台后尝试展示后台插屏；已在后台开屏页或 Activity 无效时跳过。
+     * 回前台后尝试展示后台插屏。
+     * 若本轮已拉起后台开屏，则挂起至开屏 finish；展示时重新取当前前台页。
      */
     private fun tryShowBackendInterstitial() {
         if (!AdKit.instance.getIsAllowShowAd()) {
             AdKitLog.i("skip backend interstitial, isAllowShowAd=false")
             return
         }
+        AdKit.instance.runAfterBackendSplashOrNow {
+            showBackendInterstitialOnCurrentActivity()
+        }
+    }
+
+    /**
+     * 在当前前台 [FragmentActivity] 上展示后台插屏；开屏页或无效页则跳过。
+     */
+    private fun showBackendInterstitialOnCurrentActivity() {
         val activity = currentActivityRef?.get()
         if (activity == null || activity.isFinishing || activity.isDestroyed) {
             AdKitLog.w("skip backend interstitial, no valid foreground activity")
             return
         }
+        // 仍停在开屏页时不再弹（理论上 finish 后不应走到这里）
         if (activity is SplashBackendAdActivity) {
-            AdKitLog.d("skip backend interstitial, already on SplashBackendAdActivity")
+            AdKitLog.d("skip backend interstitial, still on SplashBackendAdActivity")
             return
         }
         val fragmentActivity = activity as? FragmentActivity
@@ -89,8 +103,8 @@ internal class BackendInterstitialWatcher(
             AdKitLog.w("skip backend interstitial, foreground activity is not FragmentActivity")
             return
         }
-        AdKitLog.i("show backend interstitial: firstId=$firstId, secondId=$secondId")
-        fragmentActivity.showBackendInterstitialAd(firstId, secondId)
+        AdKitLog.i("show backend interstitial: adIds=$adIds")
+        fragmentActivity.showBackendInterstitialAd(adIds)
     }
 
     override fun onActivityStarted(activity: Activity) {

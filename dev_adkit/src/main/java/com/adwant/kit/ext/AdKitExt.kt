@@ -229,22 +229,35 @@ fun Fragment.showSwitchNInterstitial(
  * 展示双插屏
  */
 fun FragmentActivity.showDoubleInterstitialAd(firstId: String, secondId: String) {
-    showInterstitialAd(firstId) { _, _ ->
-        showInterstitialAd(secondId)
-    }
+    showSequentialInterstitialAd(listOf(firstId, secondId))
 }
 
 /**
- * 展示后台插屏（用法同 [showDoubleInterstitialAd]）。
- * 当前页为 [SplashBackendAdActivity] 时不展示，避免与后台开屏叠弹。
- * 时长判断由 [com.adwant.kit.BackendInterstitialWatcher] 负责：后台停留大于 5 秒才调用本方法。
+ * 按 [adIds] 顺序依次展示插屏：上一条关闭（或失败结束）后再展示下一条；空列表直接返回。
  */
-fun FragmentActivity.showBackendInterstitialAd(firstId: String, secondId: String) {
+fun FragmentActivity.showSequentialInterstitialAd(adIds: List<String>) {
+    val ids = adIds.filter { it.isNotBlank() }
+    if (ids.isEmpty()) return
+    fun showAt(index: Int) {
+        if (index >= ids.size) return
+        showInterstitialAd(ids[index]) { _, _ ->
+            showAt(index + 1)
+        }
+    }
+    showAt(0)
+}
+
+/**
+ * 展示后台插屏：按 [adIds] 顺序依次展示（可只配 1 个或多个）。
+ * 当前页为 [SplashBackendAdActivity] 时不展示，避免与后台开屏叠弹。
+ * 时长与「开屏结束后再弹」由 [com.adwant.kit.BackendInterstitialWatcher] / [AdKit] 协调。
+ */
+fun FragmentActivity.showBackendInterstitialAd(adIds: List<String>) {
     if (this is SplashBackendAdActivity) {
         AdKitLog.d("skip showBackendInterstitialAd, on SplashBackendAdActivity")
         return
     }
-    showDoubleInterstitialAd(firstId, secondId)
+    showSequentialInterstitialAd(adIds)
 }
 
 /**

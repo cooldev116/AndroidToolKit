@@ -10,12 +10,18 @@ import android.os.SystemClock
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.adwant.kit.ui.BaseSplashAdActivity
 import com.adwant.kit.ui.SplashBackendAdActivity
+import com.adwant.kit.ui.SplashStartAdActivity
+import com.adwant.kit.utils.isAdSdkActivity
 import java.lang.ref.WeakReference
 
 /**
  * 监听应用前后台：退出后台记录时间，回前台且停留时长达到阈值时启动宿主的后台开屏页。
+ *
+ * 仅当栈顶同时满足以下条件才拉起 [splashActivityClass]：
+ * - 非 [SplashStartAdActivity]（冷启动开屏）
+ * - 非 [SplashBackendAdActivity]（已在后台开屏）
+ * - 非穿山甲等广告 SDK 容器 Activity（如插屏承载页）
  */
 internal class SplashBackendWatcher(
     private val application: Application,
@@ -62,6 +68,10 @@ internal class SplashBackendWatcher(
         mainHandler.post { tryLaunchBackendSplash() }
     }
 
+    /**
+     * 回前台后尝试启动后台开屏。
+     * 栈顶为冷启动开屏、后台开屏或广告 SDK 容器页时跳过。
+     */
     private fun tryLaunchBackendSplash() {
         if (!AdKit.instance.getIsAllowShowAd()) {
             AdKitLog.i("skip backend splash, isAllowShowAd=false")
@@ -72,11 +82,26 @@ internal class SplashBackendWatcher(
             AdKitLog.w("skip backend splash, no valid foreground activity")
             return
         }
-        if (activity is BaseSplashAdActivity) {
-            AdKitLog.d("skip backend splash, already on splash page")
+        // 冷启动开屏页上不叠后台开屏
+        if (activity is SplashStartAdActivity) {
+            AdKitLog.d("skip backend splash, already on SplashStartAdActivity")
+            return
+        }
+        // 已在后台开屏页时不重复拉起
+        if (activity is SplashBackendAdActivity) {
+            AdKitLog.d("skip backend splash, already on SplashBackendAdActivity")
+            return
+        }
+        // 插屏等由穿山甲以独立 Activity 承载，栈顶为广告容器时不拉后台开屏
+        if (activity.isAdSdkActivity()) {
+            AdKitLog.d(
+                "skip backend splash, top is ad sdk activity: ${activity.javaClass.name}"
+            )
             return
         }
         AdKitLog.i("launch backend splash: ${splashActivityClass.name}")
+        // 先于 startActivity 标记，避免同帧后台插屏抢先弹出
+        AdKit.instance.markBackendSplashShowing()
         activity.startActivity(Intent(activity, splashActivityClass))
     }
 

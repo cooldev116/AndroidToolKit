@@ -2,6 +2,8 @@ package com.adwant.kit
 
 import android.app.Application
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.view.ViewGroup
 import androidx.fragment.app.FragmentActivity
 import com.adwant.kit.ad.BannerAd
@@ -50,6 +52,19 @@ class AdKit private constructor() {
      * 后台插屏监听（只启用一次）
      */
     private var backendInterstitialWatcher: BackendInterstitialWatcher? = null
+
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    /**
+     * 后台开屏已拉起、尚未 finish；期间后台插屏需挂起，避免叠在开屏上。
+     */
+    @Volatile
+    private var backendSplashShowing = false
+
+    /**
+     * 开屏展示期间挂起的动作（通常是后台插屏），开屏结束后再执行。
+     */
+    private var pendingAfterBackendSplash: (() -> Unit)? = null
 
     /**
      * 初始化
@@ -100,25 +115,66 @@ class AdKit private constructor() {
 
     /**
      * 启用后台插屏：退出后台停留超过 [thresholdMs]（默认 5 秒）后再回前台时，
-     * 若当前页不是 [SplashBackendAdActivity]，则按双插屏顺序展示 [firstId]、[secondId]。
-     * 重复调用无效。
+     * 按 [adIds] 顺序依次展示插屏（支持只配 1 个或多个）。
+     * 若同一次回前台会拉起后台开屏，则等开屏 Activity finish 后再展示插屏。
+     * [adIds] 过滤空白后为空则不启用；重复调用无效。
      */
     fun enableBackendInterstitial(
         application: Application,
-        firstId: String,
-        secondId: String,
+        adIds: List<String>,
         thresholdMs: Long = AdConfig.BACKEND_INTERSTITIAL_THRESHOLD_MS
     ) {
+        val validIds = adIds.filter { it.isNotBlank() }
+        if (validIds.isEmpty()) {
+            AdKitLog.w("enableBackendInterstitial ignored, adIds empty")
+            return
+        }
         if (backendInterstitialWatcher != null) {
             AdKitLog.i("enableBackendInterstitial ignored, already enabled")
             return
         }
         backendInterstitialWatcher = BackendInterstitialWatcher(
             application = application,
-            firstId = firstId,
-            secondId = secondId,
+            adIds = validIds,
             thresholdMs = thresholdMs
         ).also { it.start() }
+    }
+
+    /**
+     * 后台开屏即将 / 已经 startActivity，标记为展示中，后续插屏请求挂起。
+     */
+    internal fun markBackendSplashShowing() {
+        backendSplashShowing = true
+        AdKitLog.d("backend splash marked showing")
+    }
+
+    /**
+     * 后台开屏 Activity 已结束：清空展示中标记，并把挂起的后台插屏 post 到下一帧执行，
+     * 让底层业务页先完成 onResume，再弹插屏。
+     */
+    internal fun onBackendSplashFinished() {
+        backendSplashShowing = false
+        val pending = pendingAfterBackendSplash
+        pendingAfterBackendSplash = null
+        if (pending == null) {
+            AdKitLog.d("backend splash finished, no pending interstitial")
+            return
+        }
+        AdKitLog.i("backend splash finished, run pending interstitial")
+        mainHandler.post(pending)
+    }
+
+    /**
+     * 若后台开屏正在展示，则把 [action] 挂起至开屏 finish；否则立即执行。
+     * 用于保证后台插屏一定排在后台开屏之后。
+     */
+    internal fun runAfterBackendSplashOrNow(action: () -> Unit) {
+        if (backendSplashShowing) {
+            pendingAfterBackendSplash = action
+            AdKitLog.d("defer action until backend splash finished")
+            return
+        }
+        action()
     }
 
     /**
